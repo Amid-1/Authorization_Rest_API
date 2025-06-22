@@ -17,6 +17,16 @@ import web.repository.UserRepository;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Интеграционный тест для UserController.
+ * Проверяет полный CRUD-флоу:
+ * 1) получение пустого списка
+ * 2) создание пользователя
+ * 3) чтение созданного
+ * 4) обновление
+ * 5) удаление
+ * 6) проверка, что после удаления — 404
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser(username = "admin", roles = {"USER","ADMIN"})
@@ -26,19 +36,31 @@ class UserControllerIntegrationTest {
     @Autowired private ObjectMapper mapper;
     @Autowired private UserRepository userRepo;
 
+    /**
+     * Очищаем всех пользователей перед каждым тестом.
+     */
     @BeforeEach
     void clean() {
         userRepo.deleteAll();
     }
 
+    /**
+     * Тестирует полный жизненный цикл пользователя:
+     * - GET /api/users → []
+     * - POST /api/users → 201 + тело нового пользователя
+     * - GET /api/users/{id} → 200 + правильное имя
+     * - PUT /api/users/{id} → 200 + новое имя
+     * - DELETE /api/users/{id} → 204
+     * - GET /api/users/{id} → 404
+     */
     @Test
     void testCrudFlow() throws Exception {
-        // 1) GET пустого списка
+        // 1) Список изначально пуст
         mvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
 
-        // 2) POST → создать (UserCreateDto)
+        // 2) Создаём пользователя alice
         UserCreateDto toCreate = new UserCreateDto();
         toCreate.setUsername("alice");
         toCreate.setPassword("Pass123");
@@ -52,19 +74,18 @@ class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.username").value("alice"))
                 .andReturn().getResponse().getContentAsString();
 
-        // Ответ мапим в UserDto (без пароля)
+        // Извлекаем ID созданного пользователя
         UserDto created = mapper.readValue(body, UserDto.class);
         Long id = created.getId();
 
-        // 3) GET /{id}
+        // 3) GET по ID возвращает alice
         mvc.perform(get("/api/users/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("alice"));
 
-        // 4) PUT → изменить username (UserUpdateDto)
+        // 4) Обновляем имя на bob
         UserUpdateDto toUpdate = new UserUpdateDto();
         toUpdate.setUsername("bob");
-        // пароль не устанавливаем — он останется прежним
         String jsonUpdate = mapper.writeValueAsString(toUpdate);
 
         mvc.perform(put("/api/users/{id}", id)
@@ -73,11 +94,11 @@ class UserControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("bob"));
 
-        // 5) DELETE → удалить
+        // 5) Удаляем пользователя
         mvc.perform(delete("/api/users/{id}", id))
                 .andExpect(status().isNoContent());
 
-        // 6) GET того же → 404
+        // 6) После удаления запрос даёт 404
         mvc.perform(get("/api/users/{id}", id))
                 .andExpect(status().isNotFound());
     }

@@ -19,6 +19,11 @@ import java.nio.file.Path;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Интеграционные тесты для PhotoController.
+ * Проверяют полный сценарий: загрузка, скачивание и удаление фотографии,
+ * а также обработку неподдерживаемого формата.
+ */
 @SpringBootTest
 // @ActiveProfiles("test")
 @AutoConfigureMockMvc
@@ -31,55 +36,71 @@ class PhotoControllerIntegrationTest {
     private Long userId;
     private byte[] imgBytes;
 
+    /**
+     * Подготовка данных:
+     * 1) Очищаем репозиторий пользователей.
+     * 2) Создаём нового пользователя и сохраняем его ID.
+     * 3) Загружаем тестовый jpeg-файл в массив байт.
+     */
     @BeforeEach
     void setup() throws Exception {
         userRepo.deleteAll();
+
         User u = new User();
         u.setUsername("u1");
-        u.setPassword("x"); // хешируется при создании
+        u.setPassword("x"); // будет захеширован при сохранении
         userRepo.save(u);
         userId = userRepo.findByUsername("u1").get().getId();
 
-        // какой-нибудь маленький JPEG в ресурсах
         imgBytes = FileUtils.readFileToByteArray(
                 Path.of("src/test/resources/test-image.jpg").toFile()
         );
     }
 
+    /**
+     * Сценарий «загрузить → скачать → удалить → убедиться, что нет».
+     * Проверяет, что:
+     * - загрузка возвращает 200 OK
+     * - скачивание возвращает 200 OK и точный контент
+     * - удаление возвращает 204 No Content
+     * - повторный запрос на скачивание даёт 404 Not Found
+     */
     @Test
     void uploadAndDownloadAndDeletePhoto() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "test.jpg", MediaType.IMAGE_JPEG_VALUE, imgBytes
         );
 
-        // POST upload
-        mvc.perform(multipart("/api/users/{id}/photo", userId)
-                        .file(file))
+        // Загрузка
+        mvc.perform(multipart("/api/users/{id}/photo", userId).file(file))
                 .andExpect(status().isOk());
 
-        // GET download
+        // Скачивание
         mvc.perform(get("/api/users/{id}/photo", userId))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", MediaType.IMAGE_JPEG_VALUE))
                 .andExpect(content().bytes(imgBytes));
 
-        // DELETE
+        // Удаление
         mvc.perform(delete("/api/users/{id}/photo", userId))
                 .andExpect(status().isNoContent());
 
-        // 404 после удаления
+        // После удаления — 404 Not Found
         mvc.perform(get("/api/users/{id}/photo", userId))
                 .andExpect(status().isNotFound());
     }
 
+    /**
+     * Попытка загрузить файл неподдерживаемого типа (text/plain)
+     * должна вернуть 400 Bad Request.
+     */
     @Test
     void uploadWrongType_thenBadRequest() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "bad.txt", MediaType.TEXT_PLAIN_VALUE, "oops".getBytes()
         );
 
-        mvc.perform(multipart("/api/users/{id}/photo", userId)
-                        .file(file))
+        mvc.perform(multipart("/api/users/{id}/photo", userId).file(file))
                 .andExpect(status().isBadRequest());
     }
 }

@@ -18,6 +18,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Проверяет, что при попытке сохранить детали с дублирующимся email
+ * сервис возвращает HTTP 409 Conflict и корректное сообщение.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser(username = "admin", roles = {"USER","ADMIN"})
@@ -25,18 +29,21 @@ class DuplicateEmailIntegrationTest {
 
     @Autowired
     private MockMvc mvc;
-
     @Autowired
     private UserRepository userRepo;
     @Autowired
     private UserDetailsRepository detailsRepo;
 
+    /**
+     * Подготавливает две записи в БД:
+     * - пользователь user1 с деталями и email="dup@example.com"
+     * - пользователь user2 без деталей
+     */
     @BeforeEach
     void setup() {
         detailsRepo.deleteAll();
         userRepo.deleteAll();
 
-        // ——— Первый пользователь с деталями ———
         User user1 = new User();
         user1.setUsername("user1");
         user1.setPassword("password");
@@ -48,14 +55,16 @@ class DuplicateEmailIntegrationTest {
         user1.setDetails(det1);
         userRepo.save(user1);
 
-        // ——— Второй пользователь без деталей ———
         User user2 = new User();
         user2.setUsername("user2");
         user2.setPassword("password");
-        // details у него null
         userRepo.save(user2);
     }
 
+    /**
+     * Отправляем POST /api/users/{id}/details для user2
+     * с тем же email, что у user1 — ожидаем 409 Conflict.
+     */
     @Test
     void whenDuplicateEmailOnDifferentUser_thenConflict() throws Exception {
         Long secondId = userRepo.findByUsername("user2").get().getId();
@@ -79,4 +88,3 @@ class DuplicateEmailIntegrationTest {
                 .andExpect(jsonPath("$.message", is("Email уже используется")));
     }
 }
-

@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import web.dto.UserDetailsDto;
 import web.service.UserDetailsService;
 
+/**
+ * REST-контроллер для управления детальной информацией пользователя.
+ * Базовый путь: /api/users/{userId}/details
+ */
 @RestController
 @RequestMapping("/api/users/{userId}/details")
 public class UserDetailsController {
@@ -24,11 +28,25 @@ public class UserDetailsController {
         this.detailsService = detailsService;
     }
 
+    /**
+     * Получить детали пользователя.
+     *
+     * @param userId ID пользователя
+     * @return UserDetailsDto с данными (имя, email, телефон и т.д.)
+     */
     @GetMapping
     public UserDetailsDto get(@PathVariable Long userId) {
         return detailsService.getDetails(userId);
     }
 
+    /**
+     * Создать или обновить детали пользователя.
+     * Использует тот же сервисный метод для POST и PUT.
+     *
+     * @param userId ID пользователя
+     * @param dto    данные деталей (firstName, lastName, email и т.д.)
+     * @return ResponseEntity с созданным/обновлённым DTO и статусом 201
+     */
     @PostMapping
     public ResponseEntity<UserDetailsDto> create(
             @PathVariable Long userId,
@@ -38,6 +56,13 @@ public class UserDetailsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    /**
+     * Обновить детали пользователя.
+     *
+     * @param userId ID пользователя
+     * @param dto    новые данные деталей
+     * @return обновлённый UserDetailsDto
+     */
     @PutMapping
     public UserDetailsDto update(
             @PathVariable Long userId,
@@ -46,6 +71,12 @@ public class UserDetailsController {
         return detailsService.createOrUpdate(userId, dto);
     }
 
+    /**
+     * Удалить детали пользователя.
+     *
+     * @param userId ID пользователя
+     * @return ResponseEntity с кодом 204 No Content
+     */
     @DeleteMapping
     public ResponseEntity<Void> delete(@PathVariable Long userId) {
         detailsService.delete(userId);

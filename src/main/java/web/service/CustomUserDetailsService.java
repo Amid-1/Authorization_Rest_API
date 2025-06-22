@@ -10,6 +10,11 @@ import web.repository.UserRepository;
 import web.model.User;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис загрузки данных пользователя для Spring Security.
+ * Реализует UserDetailsService: находит пользователя по username
+ * и преобразует его роли в GrantedAuthority.
+ */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -19,17 +24,29 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Загружает UserDetails по имени пользователя.
+     * Выбрасывает UsernameNotFoundException, если пользователь не найден.
+     *
+     * @param username логин пользователя
+     * @return объект UserDetails с username, password и ролями
+     * @throws UsernameNotFoundException если в базе нет пользователя с таким логином
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Ищем в базе пользователя по username
         User appUser = userRepository.findByUsername(username)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User with username=" + username + " not found"));
+                        new UsernameNotFoundException("User with username=" + username + " not found")
+                );
 
+        // Конвертируем роли в список SimpleGrantedAuthority
         var authorities = appUser.getRoles().stream()
                 .map(r -> new SimpleGrantedAuthority(r.getName()))
                 .collect(Collectors.toList());
 
+        // Возвращаем стандартную реализацию UserDetails
         return new org.springframework.security.core.userdetails.User(
                 appUser.getUsername(),
                 appUser.getPassword(),

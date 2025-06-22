@@ -61,8 +61,6 @@ public class UserDetails {
         this.user = user;
     }
 
-    // --- getters/setters ---
-
     public Long getId() {
         return id;
     }
@@ -129,8 +127,6 @@ public class UserDetails {
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
     }
-
-    // --- equals/hashCode по id ---
 
     @Override
     public boolean equals(Object o) {

@@ -48,7 +48,6 @@ public class User {
     private UserDetails details;
 
 
-    // геттер/сеттер
     public Set<Role> getRoles() {
         return roles;
     }

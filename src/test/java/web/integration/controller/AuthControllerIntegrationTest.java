@@ -12,6 +12,12 @@ import web.dto.LoginRequestDto;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Интеграционные тесты для AuthController.
+ * Проверяют, что при корректных и некорректных
+ * учётных данных `/api/auth/login` возвращает
+ * соответствующие HTTP-статусы и тело ответа.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthControllerIntegrationTest {
@@ -19,11 +25,16 @@ class AuthControllerIntegrationTest {
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper mapper;
 
+    /**
+     * Должен вернуть HTTP 200 и непустой токен
+     * при правильных admin:admin.
+     */
     @Test
     void loginSuccess() throws Exception {
         LoginRequestDto req = new LoginRequestDto();
         req.setUsername("admin");
         req.setPassword("admin");
+
         mvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
@@ -31,11 +42,15 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.token").isNotEmpty());
     }
 
+    /**
+     * Должен вернуть HTTP 401 при неверном пароле.
+     */
     @Test
     void loginFailure() throws Exception {
         LoginRequestDto req = new LoginRequestDto();
         req.setUsername("admin");
         req.setPassword("wrong");
+
         mvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))

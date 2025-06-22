@@ -16,13 +16,13 @@ public class UserDetailsDto {
     private String firstName;
 
     @NotBlank
-    private String lastName;       // <-- добавлено
+    private String lastName;
 
     private String middleName;
 
     @Email
     @NotBlank
-    private String email;          // <-- добавлено
+    private String email;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
@@ -35,21 +35,19 @@ public class UserDetailsDto {
 
     private String photoUrl;
 
-    // геттеры и сеттеры для всех полей
-
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    public String getLastName() { return lastName; }       // <-- добавлено
+    public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
 
     public String getMiddleName() { return middleName; }
     public void setMiddleName(String middleName) { this.middleName = middleName; }
 
-    public String getEmail() { return email; }             // <-- добавлено
+    public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
     public LocalDate getDateOfBirth() { return dateOfBirth; }

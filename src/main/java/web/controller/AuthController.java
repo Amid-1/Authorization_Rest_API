@@ -10,6 +10,10 @@ import web.dto.LoginRequestDto;
 import web.dto.JwtResponseDto;
 import web.service.AuthService;
 
+/**
+ * Контроллер для аутентификации пользователей.
+ * Обрабатывает входящие запросы по пути /api/auth.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -20,8 +24,18 @@ public class AuthController {
         this.authService = authService;
     }
 
+    /**
+     * Аутентификация по логину и паролю.
+     * При успешной проверке возвращает JWT токен.
+     *
+     * @param request DTO с полями username и password
+     * @return HTTP 200 + тело { "token": "..." }
+     *         HTTP 401 при неверных учётных данных
+     */
     @PostMapping("/login")
-    public ResponseEntity<JwtResponseDto> login(@RequestBody @Valid LoginRequestDto request) {
+    public ResponseEntity<JwtResponseDto> login(
+            @RequestBody @Valid LoginRequestDto request
+    ) {
         JwtResponseDto token = authService.authenticate(request);
         return ResponseEntity.ok(token);
     }

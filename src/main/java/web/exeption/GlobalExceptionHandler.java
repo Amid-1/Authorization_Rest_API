@@ -15,10 +15,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Глобальный обработчик исключений для REST-контроллеров.
+ * Переопределяет ответы для различных типов ошибок:
+ * - 401 при неверных учетных данных
+ * - 404 при отсутствии сущности
+ * - 400 при валидации
+ * - 409 при нарушении целостности данных
+ * - 500 для всех прочих неожиданных ошибок
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 401 — неправильные креденшалы
+    /**
+     * Неверный логин/пароль.
+     */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException ex) {
         Map<String,String> body = new HashMap<>();
@@ -29,18 +40,22 @@ public class GlobalExceptionHandler {
                 .body(body);
     }
 
-    // 404 — когда не нашли сущность
+    /**
+     * Сущность не найдена в базе.
+     */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(EntityNotFoundException ex) {
         Map<String, String> body = new HashMap<>();
-        body.put("error", "Не найдено");
+        body.put("error",   "Не найдено");
         body.put("message", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(body);
     }
 
-    // 400 — когда @Valid не прошёл в контроллере
+    /**
+     * Ошибки валидации @Valid для @RequestBody.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -51,7 +66,9 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
-    // 400 — ошибки в @RequestParam, @PathVariable и т.п.
+    /**
+     * Ошибки валидации @RequestParam, @PathVariable и т.п.
+     */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, String>> handleConstraintViolation(ConstraintViolationException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -63,33 +80,33 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
+    /**
+     * Нарушение целостности данных (например, уникальность).
+     * Пытаемся «расшифровать» ошибку PostgreSQL.
+     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, String>> handleDataIntegrity(DataIntegrityViolationException ex) {
         String msg = "Нарушение целостности данных";
         Throwable root = ex.getRootCause();
 
-        if (root instanceof org.postgresql.util.PSQLException) {
-            org.postgresql.util.PSQLException pg = (org.postgresql.util.PSQLException) root;
-            // SQLState 23505 — уникальность нарушена
-            if ("23505".equals(pg.getSQLState())) {
-                String detail = pg.getServerErrorMessage().getDetail();
-                // detail: «Ключ "(email)=(dup@example.com)" уже существует.»
-                if (detail != null && detail.contains("(email)=")) {
-                    msg = "Email уже используется";
-                }
+        // Если это PSQLException с кодом 23505 (duplicate key)
+        if (root instanceof org.postgresql.util.PSQLException pg && "23505".equals(pg.getSQLState())) {
+            String detail = pg.getServerErrorMessage().getDetail();
+            if (detail != null && detail.contains("(email)=")) {
+                msg = "Email уже используется";
             }
         }
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(Map.of(
-                        "error",   "Conflict",
-                        "message", msg
-                ));
+                .body(Map.of("error", "Conflict", "message", msg));
     }
 
+    /**
+     * Общая ошибка Persistence.
+     */
     @ExceptionHandler(PersistenceException.class)
-    public ResponseEntity<Map<String,String>> handleConflict(PersistenceException ex) {
+    public ResponseEntity<Map<String, String>> handleConflict(PersistenceException ex) {
         String msg = "Нарушение целостности данных: "
                 + Optional.ofNullable(ex.getMessage()).orElse("duplicate key");
         return ResponseEntity
@@ -97,7 +114,9 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Conflict", "message", msg));
     }
 
-    // 500 — все остальные неожиданные ошибки
+    /**
+     * Любые другие неожиданные ошибки.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleAll(Exception ex) {
         Map<String, String> body = new HashMap<>();

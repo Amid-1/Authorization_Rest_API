@@ -25,7 +25,6 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        // Генерируем HMAC-256 ключ из вашей строки-секрета
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

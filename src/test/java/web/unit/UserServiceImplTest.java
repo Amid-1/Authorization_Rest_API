@@ -23,6 +23,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit-тесты для UserServiceImpl:
+ * – проверка создания пользователя с установкой роли по умолчанию и хешированием пароля
+ * – проверка обновления пароля при наличии нового значения
+ */
 class UserServiceImplTest {
 
     @Mock private UserRepository userRepo;
@@ -38,21 +43,17 @@ class UserServiceImplTest {
 
     @Test
     void createUser_assignsDefaultRole_and_encodesPassword() {
-        // Готовим входные данные – UserCreateDto
         UserCreateDto dto = new UserCreateDto();
         dto.setUsername("joe");
         dto.setPassword("Secret1");
-        // роль по умолчанию
         Role userRole = new Role("ROLE_USER");
         when(roleRepo.findByName("ROLE_USER"))
                 .thenReturn(Optional.of(userRole));
         when(encoder.encode("Secret1"))
                 .thenReturn("hash");
 
-        // Act
         service.createUser(dto);
 
-        // Assert
         ArgumentCaptor<User> cap = ArgumentCaptor.forClass(User.class);
         verify(userRepo).save(cap.capture());
         User saved = cap.getValue();
@@ -64,7 +65,6 @@ class UserServiceImplTest {
 
     @Test
     void updateUser_withNewPassword_encodesIt() {
-        // Существующий пользователь
         User existing = new User();
         existing.setId(10L);
         existing.setUsername("old");
@@ -79,7 +79,6 @@ class UserServiceImplTest {
         dto.setPassword("New1");         // новый пароль
         dto.setRoleIds(List.of());       // пустой список ролей
 
-        // Act
         service.updateUser(10L, dto);
 
         assertThat(existing.getPassword()).isEqualTo("newHash");

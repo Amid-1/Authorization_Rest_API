@@ -20,6 +20,11 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit-тесты для PhotoServiceImpl:
+ * – проверка сохранения файла и обновления поля photoUrl
+ * – поведение при отсутствии UserDetails (EntityNotFoundException)
+ */
 class PhotoServiceImplTest {
 
     @Mock
@@ -48,10 +53,8 @@ class PhotoServiceImplTest {
 
         service.uploadPhoto(1L, mf);
 
-        // файл существует
         Path written = tempDir.resolve("1_f.txt");
         assertThat(written).exists();
-        // и url в details обновлён
         assertThat(det.getPhotoUrl()).isEqualTo(written.toString());
         verify(detailsRepo).save(det);
     }

@@ -13,6 +13,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import web.service.CustomUserDetailsService;
 
+/**
+ * Конфигурация Spring Security:
+ * 1. Отключает CSRF (для REST API).
+ * 2. Устанавливает stateless-сессию (JWT).
+ * 3. Разрешает открытый доступ к /api/auth/** и требует аутентификации для остальных запросов.
+ * 4. Регистрирует кастомный UserDetailsService и JWT-фильтр.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -25,8 +32,11 @@ public class SecurityConfig {
     }
 
     /**
-     * Позволяет @Autowired AuthenticationManager в сервисах,
-     * без засорения самих @Service-классов.
+     * Позволяет автоматически внедрять AuthenticationManager в сервисы.
+     *
+     * @param authConfig конфигурация аутентификации Spring
+     * @return AuthenticationManager
+     * @throws Exception при ошибках получения менеджера
      */
     @Bean
     public AuthenticationManager authenticationManager(
@@ -35,28 +45,42 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Основная цепочка фильтров безопасности:
+     * - CSRF отключён (REST).
+     * - Сессии не используются (JWT stateless).
+     * - Все запросы кроме /api/auth/** требуют аутентификации.
+     * - Кастомный UserDetailsService и JwtFilter.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable());
-
-        http.sessionManagement(sm ->
-                sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        );
-
-        http.authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated()
-        );
-
-        // Подключаем UserDetailsService
-        http.userDetailsService(userDetailsService);
-
-        // JWT-фильтр перед UsernamePasswordAuthenticationFilter
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http
+                // Отключаем защиту от CSRF, так как используем JWT
+                .csrf(csrf -> csrf.disable())
+                // Делаем приложение stateless
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                // Конфигурируем права доступа
+                .authorizeHttpRequests(authz -> authz
+                        // Разрешаем все на /api/auth/**
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // Остальные эндпоинты — только для аутентифицированных
+                        .anyRequest().authenticated()
+                )
+                // Внедряем наш UserDetailsService
+                .userDetailsService(userDetailsService)
+                // Регистрируем JWT-фильтр до стандартного UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * Бин для хеширования паролей BCrypt.
+     *
+     * @return PasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

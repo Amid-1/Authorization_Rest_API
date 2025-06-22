@@ -11,7 +11,6 @@ public class UserUpdateDto {
     @Pattern(regexp = "^[A-Za-z0-9_]+$")
     private String username;
 
-    // пароль теперь НЕ @NotBlank — опционален
     @Size(min = 6, max = 100, message = "Password должен быть от 6 до 100 символов")
     @Pattern(
             regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",

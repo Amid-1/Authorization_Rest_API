@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис для управления пользователями:
+ * создание, чтение, обновление и удаление (CRUD).
+ */
 @Service
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
@@ -37,6 +41,9 @@ public class UserServiceImpl implements UserService {
         this.userMapper      = userMapper;
     }
 
+    /**
+     * Возвращает всех пользователей в виде DTO.
+     */
     @Override
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
@@ -44,14 +51,24 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Находит пользователя по ID.
+     *
+     * @throws EntityNotFoundException если пользователь не найден
+     */
     @Override
     public UserDto getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("User with id=" + id + " not found"));
+                        new EntityNotFoundException("User with id=" + id + " not found")
+                );
         return userMapper.toDto(user);
     }
 
+    /**
+     * Создаёт пользователя с обязательным хешированием пароля
+     * и установкой ролей (по умолчанию ROLE_USER).
+     */
     @Override
     @Transactional
     public UserDto createUser(UserCreateDto dto) {
@@ -59,14 +76,13 @@ public class UserServiceImpl implements UserService {
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        // — mutable Set вместо immutable
+        // Если роли не передали, ставим роль по умолчанию
         Set<Role> roles = new HashSet<>();
         if (dto.getRoleIds() == null || dto.getRoleIds().isEmpty()) {
             Role defaultRole = roleRepository.findByName("ROLE_USER")
                     .orElseThrow(() -> new EntityNotFoundException("Default role not found"));
             roles.add(defaultRole);
         } else {
-            // извлекаем роли и собираем в HashSet
             roleRepository.findAllById(dto.getRoleIds())
                     .forEach(roles::add);
         }
@@ -76,30 +92,26 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(saved);
     }
 
+    /**
+     * Обновляет пользователя: имя, роли и (опционально) пароль.
+     */
     @Override
     @Transactional
     public UserDto updateUser(Long id, UserUpdateDto dto) {
         User existing = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("User with id=" + id + " not found"));
+                        new EntityNotFoundException("User with id=" + id + " not found")
+                );
 
-        // 1) username
         existing.setUsername(dto.getUsername());
 
-        // 2) роли
         if (dto.getRoleIds() != null) {
-            // вариант А: полностью заменить на новый mutable Set
             Set<Role> newRoles = dto.getRoleIds().stream()
-                    .map(roleRepository::getById)      // getById сразу бросит, если нет
-                    .collect(Collectors.toSet());      // HashSet под капотом
+                    .map(roleRepository::getById)
+                    .collect(Collectors.toSet());
             existing.setRoles(newRoles);
-
-            // вариант Б (если хотите не менять сам объект-сет, а чистить/добавлять):
-            // existing.getRoles().clear();
-            // existing.getRoles().addAll(newRoles);
         }
 
-        // 3) пароль, если пришёл
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             existing.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
@@ -108,6 +120,11 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(saved);
     }
 
+    /**
+     * Удаляет пользователя по ID.
+     *
+     * @throws EntityNotFoundException если пользователь не существует
+     */
     @Override
     @Transactional
     public void deleteUser(Long id) {

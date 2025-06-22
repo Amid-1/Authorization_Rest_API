@@ -61,6 +61,5 @@ public class UserMapper {
             Set<Role> roles = new HashSet<>(roleRepository.findAllById(dto.getRoleIds()));
             existing.setRoles(roles);
         }
-        // пароль обрабатываем в сервисе: если dto.getPassword() != null, закодировать и установить
     }
 }

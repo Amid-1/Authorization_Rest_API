@@ -13,6 +13,12 @@ import web.service.CustomUserDetailsService;
 import web.util.JwtUtil;
 import java.io.IOException;
 
+/**
+ * Фильтр, который перехватывает каждый HTTP-запрос,
+ * извлекает JWT из заголовка Authorization,
+ * валидирует его и, если всё хорошо, формирует Authentication
+ * и сохраняет в SecurityContext.
+ */
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -30,23 +36,37 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        // Извлекаем заголовок Authorization
         String authHeader = request.getHeader("Authorization");
         String token = null;
+        // Ожидаем формат: "Bearer <token>"
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
         }
 
+        // Если токен есть и он валиден, получаем из него username
         if (token != null && jwtUtil.validateToken(token)) {
             String username = jwtUtil.extractUsername(token);
+
+            // Загружаем детали пользователя по username
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            var auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities()
+            // Создаём объект аутентификации
+            var auth = new org.springframework.security.authentication
+                    .UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
             );
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            // Привязываем детали запроса (IP, сессия)
+            auth.setDetails(new WebAuthenticationDetailsSource()
+                    .buildDetails(request));
+
+            // Сохраняем аутентификацию в SecurityContext
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
+        // Продолжаем цепочку фильтров
         filterChain.doFilter(request, response);
     }
 }

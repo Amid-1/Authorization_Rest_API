@@ -8,6 +8,11 @@ import web.dto.LoginRequestDto;
 import web.dto.JwtResponseDto;
 import web.util.JwtUtil;
 
+/**
+ * Сервис аутентификации пользователей.
+ * Принимает логин и пароль, проверяет их через AuthenticationManager
+ * и выдаёт JWT токен.
+ */
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -19,9 +24,18 @@ public class AuthServiceImpl implements AuthService {
         this.jwtUtil = jwtUtil;
     }
 
+    /**
+     * Аутентифицирует пользователя по логину и паролю.
+     * В случае успеха генерирует JWT по username и возвращает его в DTO.
+     *
+     * @param request DTO с полями username и password
+     * @return JwtResponseDto с полем token
+     * @throws org.springframework.security.core.AuthenticationException
+     *         при неверных учётных данных
+     */
     @Override
     public JwtResponseDto authenticate(LoginRequestDto request) {
-        // пробуем аутентифицировать пользователя
+        // Пытаемся аутентифицировать пользователя
         Authentication authentication = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
@@ -29,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
                 )
         );
 
-        // если аутентификация прошла успешно, сгенерим токен
+        // Генерируем JWT для пройденной аутентификации
         String token = jwtUtil.generateToken(authentication.getName());
         return new JwtResponseDto(token);
     }
