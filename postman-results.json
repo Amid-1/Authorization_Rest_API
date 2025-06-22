@@ -1,0 +1,208 @@
+{
+	"id": "f7160dcb-bcbc-4c62-9c31-614c94ff4165",
+	"name": "REST API basics: CRUD, test & variable",
+	"timestamp": "2025-06-22T22:01:21.765Z",
+	"collection_id": "33463762-c29287b4-1ee6-4e7b-abfe-46ca5f4125f5",
+	"folder_id": 0,
+	"environment_id": "33463762-2808d55e-87d7-44bd-8381-020886ba46b2",
+	"totalPass": 6,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2025-06-22T22:01:18.606Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "4dd68a82-59e0-4c2c-b151-d7b527392e2f",
+			"name": "Login",
+			"url": "http://localhost:8080/api/auth/login",
+			"time": 201,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				201
+			],
+			"allTests": [
+				{
+					"200 OK": true
+				}
+			]
+		},
+		{
+			"id": "582b2447-a468-4522-b858-88e89d8b3d7d",
+			"name": "Create Users",
+			"url": "http://localhost:8080/api/users",
+			"time": 267,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"201 Created": true
+			},
+			"testPassFailCounts": {
+				"201 Created": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				267
+			],
+			"allTests": [
+				{
+					"201 Created": true
+				}
+			]
+		},
+		{
+			"id": "0b02c078-1196-44d4-8f0e-7ae06234e642",
+			"name": "Get All Users",
+			"url": "http://localhost:8080/api/users",
+			"time": 151,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Код 200": true
+			},
+			"testPassFailCounts": {
+				"Код 200": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				151
+			],
+			"allTests": [
+				{
+					"Код 200": true
+				}
+			]
+		},
+		{
+			"id": "e5515e2d-d03b-4c8b-aae6-916a4a161899",
+			"name": "Get User by Id",
+			"url": "http://localhost:8080/api/users/111",
+			"time": 34,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				34
+			],
+			"allTests": [
+				{
+					"200 OK": true
+				}
+			]
+		},
+		{
+			"id": "688e66f5-eda0-4d92-a14b-ae530b3ef8ed",
+			"name": "Get Details",
+			"url": "http://localhost:8080/api/users/111/details",
+			"time": 37,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"404 Not Found": true
+			},
+			"testPassFailCounts": {
+				"404 Not Found": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				37
+			],
+			"allTests": [
+				{
+					"404 Not Found": true
+				}
+			]
+		},
+		{
+			"id": "7e0a7783-682d-411f-92f6-a3c62c9d2d0d",
+			"name": "Delete User",
+			"url": "http://localhost:8080/api/users/111",
+			"time": 55,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"204 No Content": true
+			},
+			"testPassFailCounts": {
+				"204 No Content": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				55
+			],
+			"allTests": [
+				{
+					"204 No Content": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 745,
+	"collection": {
+		"requests": [
+			{
+				"id": "4dd68a82-59e0-4c2c-b151-d7b527392e2f",
+				"method": "POST"
+			},
+			{
+				"id": "582b2447-a468-4522-b858-88e89d8b3d7d",
+				"method": "POST"
+			},
+			{
+				"id": "0b02c078-1196-44d4-8f0e-7ae06234e642",
+				"method": "GET"
+			},
+			{
+				"id": "e5515e2d-d03b-4c8b-aae6-916a4a161899",
+				"method": "GET"
+			},
+			{
+				"id": "688e66f5-eda0-4d92-a14b-ae530b3ef8ed",
+				"method": "GET"
+			},
+			{
+				"id": "7e0a7783-682d-411f-92f6-a3c62c9d2d0d",
+				"method": "DELETE"
+			}
+		]
+	}
+}
