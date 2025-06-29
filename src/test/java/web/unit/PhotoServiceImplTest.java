@@ -12,6 +12,8 @@ import web.repository.UserRepository;
 import web.service.PhotoServiceImpl;
 
 import jakarta.persistence.EntityNotFoundException;
+import web.validator.ImageValidator;
+
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -28,6 +30,9 @@ import static org.mockito.Mockito.when;
 class PhotoServiceImplTest {
 
     @Mock
+    private ImageValidator validator;
+
+    @Mock
     private UserRepository userRepo;
 
     @Mock private UserDetailsRepository detailsRepo;
@@ -38,7 +43,7 @@ class PhotoServiceImplTest {
     @BeforeEach
     void init() {
         MockitoAnnotations.openMocks(this);
-        service = new PhotoServiceImpl(detailsRepo, userRepo, tempDir.toString());
+        service = new PhotoServiceImpl(validator, detailsRepo, userRepo, tempDir.toString());
     }
 
     @Test

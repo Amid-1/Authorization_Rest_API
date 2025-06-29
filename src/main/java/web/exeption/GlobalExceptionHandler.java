@@ -128,4 +128,11 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(body);
     }
+
+    @ExceptionHandler(InvalidImageFormatException.class)
+    public ResponseEntity<Map<String,String>> handleInvalidImage(InvalidImageFormatException ex) {
+        return ResponseEntity
+                .badRequest()
+                .body(Map.of("error","Bad Request", "message", ex.getMessage()));
+    }
 }
