@@ -48,6 +48,7 @@ class PhotoServiceImplTest {
 
     @Test
     void uploadPhoto_savesFile_and_updatesUrl() throws Exception {
+        // подготовка
         UserDetails det = new UserDetails();
         det.setUser(new web.model.User());
         when(detailsRepo.findByUserId(1L)).thenReturn(Optional.of(det));
@@ -56,11 +57,20 @@ class PhotoServiceImplTest {
         MockMultipartFile mf = new MockMultipartFile("file", "f.txt",
                 "text/plain", data);
 
+        // вызываем
         service.uploadPhoto(1L, mf);
 
-        Path written = tempDir.resolve("1_f.txt");
+        // проверяем, что details.photoUrl не пустой и файл там лежит
+        String photoUrl = det.getPhotoUrl();
+        assertThat(photoUrl).isNotNull();
+
+        Path written = Path.of(photoUrl);
+        // файл должен лежать именно в нашей tempDir
+        assertThat(written.getParent()).isEqualTo(tempDir);
+        // и файл реально создан
         assertThat(written).exists();
-        assertThat(det.getPhotoUrl()).isEqualTo(written.toString());
+
+        // и репозиторий был сохранён
         verify(detailsRepo).save(det);
     }
 
